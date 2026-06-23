@@ -84,6 +84,9 @@ if ! id "$SERVICE_USER" &>/dev/null; then
 fi
 
 # ── Clone / update repo ─────────────────────────────────────────────────────────
+# Fix git safe.directory for root installs
+git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
+
 if [ -d "$APP_DIR/.git" ]; then
   log "Updating existing repo..."
   cd "$APP_DIR"
