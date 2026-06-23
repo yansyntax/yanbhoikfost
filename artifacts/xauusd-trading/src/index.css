@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -11,167 +10,120 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
-  --color-card-border: hsl(var(--card-border));
-
   --color-popover: hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-popover-border: hsl(var(--popover-border));
-
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-primary-border: var(--primary-border);
-
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-secondary-border: var(--secondary-border);
-
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-muted-border: var(--muted-border);
-
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-accent-border: var(--accent-border);
-
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-destructive-border: var(--destructive-border);
-
   --color-chart-1: hsl(var(--chart-1));
   --color-chart-2: hsl(var(--chart-2));
   --color-chart-3: hsl(var(--chart-3));
   --color-chart-4: hsl(var(--chart-4));
   --color-chart-5: hsl(var(--chart-5));
-
-  --color-sidebar: hsl(var(--sidebar));
-  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
-  --color-sidebar-border: hsl(var(--sidebar-border));
-  --color-sidebar-primary: hsl(var(--sidebar-primary));
-  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
-  --color-sidebar-primary-border: var(--sidebar-primary-border);
-  --color-sidebar-accent: hsl(var(--sidebar-accent));
-  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
-  --color-sidebar-accent-border: var(--sidebar-accent-border);
-  --color-sidebar-ring: hsl(var(--sidebar-ring));
-
   --font-sans: var(--app-font-sans);
-  --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
-
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root, .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
-
-  --opaque-button-border-intensity: 9;
-
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
-
-  /* Deep charcoal background */
-  --background: 240 10% 4%;
-  --foreground: 0 0% 98%;
-
-  /* Darker borders */
-  --border: 240 10% 12%;
-  
-  /* Cards */
-  --card: 240 10% 6%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 240 10% 12%;
-
-  /* Sidebar */
-  --sidebar: 240 10% 6%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 240 10% 12%;
-  --sidebar-primary: 51 100% 50%;
-  --sidebar-primary-foreground: 240 10% 4%;
-  --sidebar-accent: 240 10% 10%;
-  --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 51 100% 50%;
-
-  /* Popover */
-  --popover: 240 10% 6%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 240 10% 12%;
-
-  /* Primary: Gold #FFD700 -> 51 100% 50% */
-  --primary: 51 100% 50%;
-  --primary-foreground: 240 10% 4%;
-
-  --secondary: 240 10% 12%;
-  --secondary-foreground: 0 0% 98%;
-
-  --muted: 240 10% 12%;
-  --muted-foreground: 240 5% 65%;
-
-  --accent: 240 10% 12%;
-  --accent-foreground: 0 0% 98%;
-
-  /* Red/Sell */
-  --destructive: 348 83% 47%;
-  --destructive-foreground: 0 0% 98%;
-
-  --input: 240 10% 16%;
-  --ring: 51 100% 50%;
-
-  /* Green/Buy */
-  --chart-1: 142 71% 45%; 
-  --chart-2: 348 83% 47%; 
-  --chart-3: 51 100% 50%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
-
-  --app-font-sans: 'Inter', sans-serif;
-  --app-font-serif: Georgia, serif;
-  --app-font-mono: 'JetBrains Mono', monospace;
-  --radius: .25rem;
-
-  --shadow-2xs: 0px 2px 0px 0px rgba(0,0,0,0.5);
-  --shadow-xs: 0px 2px 0px 0px rgba(0,0,0,0.5);
-  --shadow-sm: 0px 2px 0px 0px rgba(0,0,0,0.5), 0px 1px 2px -1px rgba(0,0,0,0.5);
-  --shadow: 0px 2px 0px 0px rgba(0,0,0,0.5), 0px 1px 2px -1px rgba(0,0,0,0.5);
-  --shadow-md: 0px 2px 0px 0px rgba(0,0,0,0.5), 0px 2px 4px -1px rgba(0,0,0,0.5);
-  --shadow-lg: 0px 2px 0px 0px rgba(0,0,0,0.5), 0px 4px 6px -1px rgba(0,0,0,0.5);
-  --shadow-xl: 0px 2px 0px 0px rgba(0,0,0,0.5), 0px 8px 10px -1px rgba(0,0,0,0.5);
-  --shadow-2xl: 0px 2px 0px 0px rgba(0,0,0,0.5);
-
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+:root {
+  --background: 222 47% 6%;
+  --foreground: 210 40% 96%;
+  --border: 220 20% 16%;
+  --input: 220 20% 18%;
+  --ring: 45 100% 55%;
+  --card: 222 40% 9%;
+  --card-foreground: 210 40% 96%;
+  --popover: 222 40% 9%;
+  --popover-foreground: 210 40% 96%;
+  --primary: 45 100% 55%;
+  --primary-foreground: 222 47% 6%;
+  --secondary: 220 20% 14%;
+  --secondary-foreground: 210 40% 96%;
+  --muted: 220 20% 14%;
+  --muted-foreground: 215 20% 55%;
+  --accent: 220 20% 16%;
+  --accent-foreground: 210 40% 96%;
+  --destructive: 0 80% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --chart-1: 142 72% 50%;
+  --chart-2: 0 80% 55%;
+  --chart-3: 45 100% 55%;
+  --chart-4: 221 83% 60%;
+  --chart-5: 280 70% 60%;
+  --app-font-sans: 'Inter', system-ui, sans-serif;
+  --app-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --radius: 0.5rem;
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-  }
+  * { @apply border-border; }
+  body { @apply font-sans antialiased bg-background text-foreground; }
 }
 
-@layer utilities {
-  .font-mono {
-    font-family: var(--app-font-mono);
-  }
-  .pulse-active {
-    animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+  50% { box-shadow: 0 0 20px 4px rgba(251, 191, 36, 0.2); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-@keyframes pulse-border {
-  0%, 100% { border-color: rgba(255, 215, 0, 0.2); }
-  50% { border-color: rgba(255, 215, 0, 0.6); }
+.pulse-gold { animation: pulse-glow 2s ease-in-out infinite; }
+.slide-up { animation: slide-up 0.4s ease-out; }
+.blink { animation: blink 1.5s ease-in-out infinite; }
+
+/* Signal badge glow */
+.signal-buy {
+  background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+  border: 1px solid rgba(34,197,94,0.4);
+  box-shadow: 0 0 30px rgba(34,197,94,0.1), inset 0 1px 0 rgba(34,197,94,0.1);
 }
+.signal-sell {
+  background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+  border: 1px solid rgba(239,68,68,0.4);
+  box-shadow: 0 0 30px rgba(239,68,68,0.1), inset 0 1px 0 rgba(239,68,68,0.1);
+}
+.signal-wait {
+  background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(251,191,36,0.03));
+  border: 1px solid rgba(251,191,36,0.3);
+}
+
+/* Card hover */
+.card-hover { transition: border-color 0.2s, box-shadow 0.2s; }
+.card-hover:hover { border-color: hsl(45 100% 55% / 0.3); box-shadow: 0 0 20px rgba(251,191,36,0.05); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+
+/* SMC zone colors */
+.zone-fvg { border-left: 3px solid rgba(99,102,241,0.8); background: rgba(99,102,241,0.06); }
+.zone-ob { border-left: 3px solid rgba(251,191,36,0.8); background: rgba(251,191,36,0.06); }
+.zone-liquidity { border-left: 3px solid rgba(239,68,68,0.8); background: rgba(239,68,68,0.06); }
+.zone-choch { border-left: 3px solid rgba(168,85,247,0.8); background: rgba(168,85,247,0.06); }
+.zone-bos { border-left: 3px solid rgba(59,130,246,0.8); background: rgba(59,130,246,0.06); }
+.zone-demand { border-left: 3px solid rgba(34,197,94,0.8); background: rgba(34,197,94,0.06); }
+.zone-supply { border-left: 3px solid rgba(239,68,68,0.8); background: rgba(239,68,68,0.06); }
+.zone-support { border-left: 3px solid rgba(34,197,94,0.6); background: rgba(34,197,94,0.04); }
+.zone-resistance { border-left: 3px solid rgba(239,68,68,0.6); background: rgba(239,68,68,0.04); }
+.zone-rbs { border-left: 3px solid rgba(251,191,36,0.6); background: rgba(251,191,36,0.04); }
+.zone-sbr { border-left: 3px solid rgba(249,115,22,0.6); background: rgba(249,115,22,0.04); }
+.zone-default { border-left: 3px solid rgba(148,163,184,0.5); background: rgba(148,163,184,0.04); }

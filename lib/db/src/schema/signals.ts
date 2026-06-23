@@ -8,12 +8,13 @@ export const signalsTable = pgTable("signals", {
   entryPrice: real("entry_price").notNull(),
   takeProfit: real("take_profit").notNull(),
   stopLoss: real("stop_loss").notNull(),
-  fibLevel: text("fib_level").notNull(),
+  area: text("area").notNull().default("ZONE"), // ORDERBLOCK | FVG | DEMAND | SUPPLY | SUPPORT | RESISTANCE | RETEST | PULLBACK | HNSS | S&R | RBS | SBR
   reason: text("reason").notNull(),
   status: text("status").notNull().default("ACTIVE"), // ACTIVE | EXPIRED | HIT_TP | HIT_SL
-  timeframe: text("timeframe").notNull().default("M5"),
+  timeframe: text("timeframe").notNull().default("H1"),
   rrRatio: real("rr_ratio"),
   confidence: integer("confidence"),
+  smcContext: text("smc_context"), // JSON string with SMC details
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

@@ -1,130 +1,143 @@
-import { Layout } from "@/components/layout";
-import { useGetSignalHistory, useGetSignalStats, getGetSignalStatsQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useGetSignalHistory, useGetSignalStats } from "@workspace/api-client-react";
+import Layout from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, Target, ShieldAlert, Clock, Percent } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { History, TrendingUp, TrendingDown, Award, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+
+const STATUS_CONFIG = {
+  ACTIVE: { label: "Aktif", color: "text-amber-400 border-amber-400/30 bg-amber-400/5" },
+  HIT_TP: { label: "TP Hit ✓", color: "text-emerald-400 border-emerald-400/30 bg-emerald-400/5" },
+  HIT_SL: { label: "SL Hit ✗", color: "text-red-400 border-red-400/30 bg-red-400/5" },
+  EXPIRED: { label: "Expired", color: "text-muted-foreground border-border/40" },
+};
 
 export default function HistoryPage() {
-  const { data: history, isLoading: loadingHistory } = useGetSignalHistory();
-  const { data: stats, isLoading: loadingStats } = useGetSignalStats({
-    query: { refetchInterval: 60000, queryKey: getGetSignalStatsQueryKey() }
-  });
+  const { data: history = [], isLoading } = useGetSignalHistory();
+  const { data: stats } = useGetSignalStats();
+
+  const winRate = stats ? Math.round((stats.winRate ?? 0) * 100) : 0;
 
   return (
     <Layout>
-      <div className="flex flex-col gap-6">
+      <div className="space-y-5 slide-up">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight mb-2">Performance History</h1>
-          <p className="text-muted-foreground text-sm">Historical signal tracking and account analytics.</p>
+          <h1 className="text-lg font-bold tracking-tight">Signal History</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Riwayat 50 signal terakhir</p>
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <StatCard title="Win Rate" value={stats ? `${stats.winRate}%` : null} icon={Percent} loading={loadingStats} highlight={stats && stats.winRate > 50} />
-          <StatCard title="Total Signals" value={stats?.totalSignals} icon={TrendingUp} loading={loadingStats} />
-          <StatCard title="Avg R:R" value={stats?.avgRR} icon={Target} loading={loadingStats} />
-          <StatCard title="TP Hit" value={stats?.hitTP} icon={Target} loading={loadingStats} className="text-chart-1 border-chart-1/20 bg-chart-1/5" />
-          <StatCard title="SL Hit" value={stats?.hitSL} icon={ShieldAlert} loading={loadingStats} className="text-destructive border-destructive/20 bg-destructive/5" />
-        </div>
-
-        {/* History Table */}
-        <Card className="border-border">
-          <div className="rounded-md border border-border/50">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow className="border-border/50">
-                  <TableHead className="w-[100px]">Type</TableHead>
-                  <TableHead>Timeframe</TableHead>
-                  <TableHead className="text-right font-mono">Entry</TableHead>
-                  <TableHead className="text-right font-mono">TP</TableHead>
-                  <TableHead className="text-right font-mono">SL</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loadingHistory ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-12" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-20 ml-auto" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-20 ml-auto" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-20 ml-auto" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-24 ml-auto" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : history && history.length > 0 ? (
-                  history.map((signal) => (
-                    <TableRow key={signal.id} className="border-border/50 hover:bg-muted/30">
-                      <TableCell>
-                        <span className={`font-bold text-xs px-2 py-1 rounded ${signal.type === 'BUY' ? 'text-chart-1 bg-chart-1/10' : 'text-destructive bg-destructive/10'}`}>
-                          {signal.type}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-background text-xs font-mono">{signal.timeframe}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">{signal.entryPrice.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-mono text-sm text-chart-1">{signal.takeProfit.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-mono text-sm text-destructive">{signal.stopLoss.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={signal.status} />
-                      </TableCell>
-                      <TableCell className="text-right text-xs text-muted-foreground font-mono">
-                        {new Date(signal.createdAt).toLocaleDateString()} {new Date(signal.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                      No signal history found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
-      </div>
-    </Layout>
-  );
-}
-
-function StatCard({ title, value, icon: Icon, loading, className = "", highlight = false }: any) {
-  return (
-    <Card className={`border-border ${className}`}>
-      <CardContent className="p-4 flex flex-col items-center text-center">
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-          <Icon className="h-4 w-4" />
-          {title}
-        </div>
-        {loading ? (
-          <Skeleton className="h-8 w-16" />
-        ) : (
-          <div className={`text-2xl font-bold font-mono ${highlight ? 'text-chart-1' : ''}`}>
-            {value !== undefined && value !== null ? value : '-'}
+        {/* Stats Bar */}
+        {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "Total Signal", value: stats.totalSignals, icon: History, color: "text-foreground" },
+              { label: "Win Rate", value: `${winRate}%`, icon: Award, color: winRate >= 60 ? "text-emerald-400" : winRate >= 40 ? "text-amber-400" : "text-red-400" },
+              { label: "TP Hit", value: stats.hitTP, icon: TrendingUp, color: "text-emerald-400" },
+              { label: "SL Hit", value: stats.hitSL, icon: TrendingDown, color: "text-red-400" },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="bg-card border border-border/60 rounded-xl p-4 card-hover">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] text-muted-foreground">{label}</span>
+                  <Icon className={cn("w-4 h-4", color)} />
+                </div>
+                <div className={cn("text-2xl font-bold", color)}>{value}</div>
+              </div>
+            ))}
           </div>
         )}
-      </CardContent>
-    </Card>
-  );
-}
 
-function StatusBadge({ status }: { status: string }) {
-  let styles = "bg-muted text-muted-foreground";
-  
-  if (status === "HIT_TP") styles = "bg-chart-1/20 text-chart-1 border-chart-1/30 border";
-  else if (status === "HIT_SL") styles = "bg-destructive/20 text-destructive border-destructive/30 border";
-  else if (status === "ACTIVE") styles = "bg-primary/20 text-primary border-primary/30 border animate-pulse";
+        {/* Win Rate Bar */}
+        {stats && (stats.hitTP + stats.hitSL) > 0 && (
+          <div className="bg-card border border-border/60 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">Win / Loss Ratio</span>
+              <span className="text-xs font-semibold text-foreground">{stats.hitTP}W — {stats.hitSL}L</span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all"
+                style={{ width: `${winRate}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-1 text-[10px] text-muted-foreground">
+              <span>0%</span>
+              <span className={cn("font-semibold", winRate >= 60 ? "text-emerald-400" : "text-amber-400")}>{winRate}%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        )}
 
-  return (
-    <span className={`text-xs font-bold px-2.5 py-1 rounded-sm tracking-wide ${styles}`}>
-      {status.replace("_", " ")}
-    </span>
+        {/* Signal List */}
+        {isLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-20 rounded-xl bg-card animate-pulse border border-border/40" />
+            ))}
+          </div>
+        ) : history.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">
+            <History className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">Belum ada riwayat signal.</p>
+            <p className="text-xs mt-1">Signal akan muncul setelah ada konfluensi SMC yang kuat.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {history.map((s) => {
+              const statusConf = STATUS_CONFIG[s.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.EXPIRED;
+              const isBuy = s.type === "BUY";
+
+              return (
+                <div key={s.id} className="bg-card border border-border/60 rounded-xl p-4 card-hover flex items-center gap-4">
+                  {/* Type */}
+                  <div className={cn("w-14 text-center rounded-lg py-2 shrink-0",
+                    isBuy ? "bg-emerald-400/10 border border-emerald-400/20" : "bg-red-400/10 border border-red-400/20"
+                  )}>
+                    <div className={cn("text-sm font-black", isBuy ? "text-emerald-400" : "text-red-400")}>
+                      {isBuy ? "▲" : "▼"}
+                    </div>
+                    <div className={cn("text-[10px] font-bold", isBuy ? "text-emerald-400" : "text-red-400")}>
+                      {s.type}
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5", statusConf.color)}>
+                        {statusConf.label}
+                      </Badge>
+                      {s.confidence != null && (
+                        <span className="text-[10px] text-muted-foreground">{s.confidence}% confidence</span>
+                      )}
+                      {s.rrRatio != null && (
+                        <span className="text-[10px] text-muted-foreground">1:{s.rrRatio.toFixed(1)} R:R</span>
+                      )}
+                    </div>
+                    <div className="text-[11px] font-mono text-muted-foreground">
+                      Entry: <span className="text-foreground">{s.entryPrice.toFixed(2)}</span> |
+                      TP: <span className="text-emerald-400">{s.takeProfit.toFixed(2)}</span> |
+                      SL: <span className="text-red-400">{s.stopLoss.toFixed(2)}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.reason}</div>
+                  </div>
+
+                  {/* Time */}
+                  <div className="text-right shrink-0">
+                    <div className="text-[10px] text-muted-foreground">
+                      {format(new Date(s.createdAt), "dd MMM", { locale: id })}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {format(new Date(s.createdAt), "HH:mm")}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground/50 mt-0.5">{s.timeframe}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </Layout>
   );
 }

@@ -1,8 +1,9 @@
 openapi: 3.1.0
 info:
+  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: XAUUSD Trading Signal API
+  version: 0.2.0
+  description: XAUUSD Trading Signal API — Gold Signal Pro
 servers:
   - url: /api
     description: Base API path
@@ -12,14 +13,13 @@ tags:
   - name: signals
     description: Trading signal operations
   - name: analysis
-    description: Market analysis operations
+    description: Market analysis & SMC operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -33,7 +33,6 @@ paths:
       operationId: getActiveSignals
       tags: [signals]
       summary: Get all active trading signals
-      description: Returns currently active (non-expired, non-hit) signals
       responses:
         "200":
           description: Active signals
@@ -48,7 +47,7 @@ paths:
     post:
       operationId: createSignal
       tags: [signals]
-      summary: Create a new trading signal
+      summary: Create a new trading signal manually
       requestBody:
         required: true
         content:
@@ -67,13 +66,19 @@ paths:
     patch:
       operationId: expireSignal
       tags: [signals]
-      summary: Expire (invalidate) a signal manually
+      summary: Expire a signal manually
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpireRequest"
       responses:
         "200":
           description: Signal expired
@@ -101,11 +106,16 @@ paths:
     get:
       operationId: getMarketAnalysis
       tags: [analysis]
-      summary: Get current market analysis for XAUUSD
-      description: Returns current market bias, key levels, Fibonacci zones
+      summary: Get full XAUUSD market analysis with SMC + auto signal
+      description: >
+        Fetches real XAUUSD (GC=F) price data, runs full SMC analysis
+        (FVG, Order Block, Liquidity, CHoCH, BOS, S&D, S&R, RBS, SBR,
+        Retest, Pullback, HNSS), calculates MA27/MA54/Stochastic,
+        identifies candlestick patterns, and auto-generates a signal if
+        strong confluence is found.
       responses:
         "200":
-          description: Market analysis
+          description: Full market analysis
           content:
             application/json:
               schema:
@@ -118,11 +128,24 @@ paths:
       summary: Get signal performance statistics
       responses:
         "200":
-          description: Signal stats
+          description: Signal statistics
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SignalStats"
+
+  /analysis/candles:
+    get:
+      operationId: getCandles
+      tags: [analysis]
+      summary: Get recent XAUUSD OHLCV candle data
+      responses:
+        "200":
+          description: Candle data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CandleResponse"
 
 components:
   schemas:
@@ -142,7 +165,7 @@ components:
         - entryPrice
         - takeProfit
         - stopLoss
-        - fibLevel
+        - area
         - reason
         - status
         - timeframe
@@ -160,7 +183,7 @@ components:
           type: number
         stopLoss:
           type: number
-        fibLevel:
+        area:
           type: string
         reason:
           type: string
@@ -173,12 +196,17 @@ components:
           type: ["number", "null"]
         confidence:
           type: ["integer", "null"]
+        smcContext:
+          type: ["string", "null"]
         createdAt:
           type: string
+          format: date-time
         expiresAt:
           type: string
+          format: date-time
         updatedAt:
           type: ["string", "null"]
+          format: date-time
 
     SignalInput:
       type: object
@@ -187,9 +215,8 @@ components:
         - entryPrice
         - takeProfit
         - stopLoss
-        - fibLevel
+        - area
         - reason
-        - timeframe
       properties:
         type:
           type: string
@@ -200,16 +227,119 @@ components:
           type: number
         stopLoss:
           type: number
-        fibLevel:
+        area:
           type: string
         reason:
           type: string
         timeframe:
           type: string
         rrRatio:
+          type: number
+        confidence:
+          type: integer
+        smcContext:
+          type: string
+
+    ExpireRequest:
+      type: object
+      properties:
+        note:
+          type: string
+
+    SmcZone:
+      type: object
+      required:
+        - type
+        - high
+        - low
+        - direction
+        - strength
+      properties:
+        type:
+          type: string
+          description: "FVG | ORDER_BLOCK | LIQUIDITY | CHOCH | BOS | DEMAND | SUPPLY | SUPPORT | RESISTANCE | RBS | SBR | RETEST | PULLBACK | HNSS"
+        high:
+          type: number
+        low:
+          type: number
+        direction:
+          type: string
+          enum: [BULLISH, BEARISH, NEUTRAL]
+        strength:
+          type: string
+          enum: [WEAK, MEDIUM, STRONG]
+        description:
+          type: string
+
+    Indicator:
+      type: object
+      required:
+        - rsi
+        - ma27
+        - ma54
+        - stochK
+        - stochD
+        - atr
+      properties:
+        rsi:
+          type: number
+        ma27:
+          type: number
+        ma54:
+          type: number
+        stochK:
+          type: number
+        stochD:
+          type: number
+        atr:
+          type: number
+        maSignal:
+          type: string
+          description: "BULLISH | BEARISH | NEUTRAL based on MA27 vs MA54 crossover"
+        stochSignal:
+          type: string
+          description: "OVERBOUGHT | OVERSOLD | NEUTRAL"
+
+    CandlestickPattern:
+      type: object
+      properties:
+        name:
+          type: string
+        direction:
+          type: string
+          enum: [BULLISH, BEARISH, NEUTRAL]
+        strength:
+          type: string
+          enum: [WEAK, MEDIUM, STRONG]
+
+    AutoSignal:
+      type: object
+      required:
+        - recommendation
+      properties:
+        recommendation:
+          type: string
+          enum: [BUY, SELL, WAIT]
+        entryPrice:
+          type: ["number", "null"]
+        takeProfit:
+          type: ["number", "null"]
+        stopLoss:
+          type: ["number", "null"]
+        area:
+          type: ["string", "null"]
+        reason:
+          type: ["string", "null"]
+        rrRatio:
           type: ["number", "null"]
         confidence:
           type: ["integer", "null"]
+        confluenceScore:
+          type: integer
+        confluenceDetails:
+          type: array
+          items:
+            type: string
 
     MarketAnalysis:
       type: object
@@ -218,21 +348,31 @@ components:
         - currentPrice
         - trend
         - keyLevels
-        - fibLevels
         - indicators
+        - smcZones
+        - signal
         - summary
         - updatedAt
+        - dataSource
+        - timeframe
       properties:
         bias:
           type: string
           enum: [BULLISH, BEARISH, NEUTRAL]
         currentPrice:
           type: number
+        prevClose:
+          type: number
+        changePercent:
+          type: number
         trend:
+          type: string
+        timeframe:
+          type: string
+        dataSource:
           type: string
         keyLevels:
           type: object
-          required: [support, resistance, pivot]
           properties:
             support:
               type: array
@@ -258,20 +398,20 @@ components:
             fib786:
               type: number
         indicators:
-          type: object
-          properties:
-            rsi:
-              type: number
-            ema20:
-              type: number
-            ema50:
-              type: number
-            ema200:
-              type: number
+          $ref: "#/components/schemas/Indicator"
+        smcZones:
+          type: array
+          items:
+            $ref: "#/components/schemas/SmcZone"
+        candlestick:
+          $ref: "#/components/schemas/CandlestickPattern"
+        signal:
+          $ref: "#/components/schemas/AutoSignal"
         summary:
           type: string
         updatedAt:
           type: string
+          format: date-time
 
     SignalStats:
       type: object
@@ -295,3 +435,43 @@ components:
           type: number
         avgRR:
           type: number
+
+    Candle:
+      type: object
+      required:
+        - time
+        - open
+        - high
+        - low
+        - close
+        - volume
+      properties:
+        time:
+          type: string
+          format: date-time
+        open:
+          type: number
+        high:
+          type: number
+        low:
+          type: number
+        close:
+          type: number
+        volume:
+          type: number
+
+    CandleResponse:
+      type: object
+      required:
+        - symbol
+        - timeframe
+        - candles
+      properties:
+        symbol:
+          type: string
+        timeframe:
+          type: string
+        candles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Candle"
