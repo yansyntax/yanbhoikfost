@@ -96,6 +96,7 @@ async function buildAll() {
       "wrangler",
       "zeromq",
       "zeromq-prebuilt",
+      "yahoo-finance2",
       "playwright",
       "puppeteer",
       "puppeteer-core",
