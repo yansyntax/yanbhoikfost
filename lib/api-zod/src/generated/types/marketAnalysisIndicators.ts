@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
-}
+export type MarketAnalysisIndicators = {
+  rsi?: number;
+  ema20?: number;
+  ema50?: number;
+  ema200?: number;
+};

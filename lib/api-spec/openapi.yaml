@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: XAUUSD Trading Signal API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: signals
+    description: Trading signal operations
+  - name: analysis
+    description: Market analysis operations
 paths:
   /healthz:
     get:
@@ -24,6 +27,103 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /signals/active:
+    get:
+      operationId: getActiveSignals
+      tags: [signals]
+      summary: Get all active trading signals
+      description: Returns currently active (non-expired, non-hit) signals
+      responses:
+        "200":
+          description: Active signals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Signal"
+
+  /signals:
+    post:
+      operationId: createSignal
+      tags: [signals]
+      summary: Create a new trading signal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignalInput"
+      responses:
+        "201":
+          description: Signal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Signal"
+
+  /signals/{id}/expire:
+    patch:
+      operationId: expireSignal
+      tags: [signals]
+      summary: Expire (invalidate) a signal manually
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Signal expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Signal"
+
+  /signals/history:
+    get:
+      operationId: getSignalHistory
+      tags: [signals]
+      summary: Get signal history (last 50)
+      responses:
+        "200":
+          description: Signal history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Signal"
+
+  /analysis/market:
+    get:
+      operationId: getMarketAnalysis
+      tags: [analysis]
+      summary: Get current market analysis for XAUUSD
+      description: Returns current market bias, key levels, Fibonacci zones
+      responses:
+        "200":
+          description: Market analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketAnalysis"
+
+  /analysis/stats:
+    get:
+      operationId: getSignalStats
+      tags: [analysis]
+      summary: Get signal performance statistics
+      responses:
+        "200":
+          description: Signal stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +134,164 @@ components:
       required:
         - status
 
+    Signal:
+      type: object
+      required:
+        - id
+        - type
+        - entryPrice
+        - takeProfit
+        - stopLoss
+        - fibLevel
+        - reason
+        - status
+        - timeframe
+        - createdAt
+        - expiresAt
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [BUY, SELL]
+        entryPrice:
+          type: number
+        takeProfit:
+          type: number
+        stopLoss:
+          type: number
+        fibLevel:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, EXPIRED, HIT_TP, HIT_SL]
+        timeframe:
+          type: string
+        rrRatio:
+          type: ["number", "null"]
+        confidence:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+        expiresAt:
+          type: string
+        updatedAt:
+          type: ["string", "null"]
+
+    SignalInput:
+      type: object
+      required:
+        - type
+        - entryPrice
+        - takeProfit
+        - stopLoss
+        - fibLevel
+        - reason
+        - timeframe
+      properties:
+        type:
+          type: string
+          enum: [BUY, SELL]
+        entryPrice:
+          type: number
+        takeProfit:
+          type: number
+        stopLoss:
+          type: number
+        fibLevel:
+          type: string
+        reason:
+          type: string
+        timeframe:
+          type: string
+        rrRatio:
+          type: ["number", "null"]
+        confidence:
+          type: ["integer", "null"]
+
+    MarketAnalysis:
+      type: object
+      required:
+        - bias
+        - currentPrice
+        - trend
+        - keyLevels
+        - fibLevels
+        - indicators
+        - summary
+        - updatedAt
+      properties:
+        bias:
+          type: string
+          enum: [BULLISH, BEARISH, NEUTRAL]
+        currentPrice:
+          type: number
+        trend:
+          type: string
+        keyLevels:
+          type: object
+          required: [support, resistance, pivot]
+          properties:
+            support:
+              type: array
+              items:
+                type: number
+            resistance:
+              type: array
+              items:
+                type: number
+            pivot:
+              type: number
+        fibLevels:
+          type: object
+          properties:
+            fib236:
+              type: number
+            fib382:
+              type: number
+            fib500:
+              type: number
+            fib618:
+              type: number
+            fib786:
+              type: number
+        indicators:
+          type: object
+          properties:
+            rsi:
+              type: number
+            ema20:
+              type: number
+            ema50:
+              type: number
+            ema200:
+              type: number
+        summary:
+          type: string
+        updatedAt:
+          type: string
+
+    SignalStats:
+      type: object
+      required:
+        - totalSignals
+        - hitTP
+        - hitSL
+        - expired
+        - winRate
+        - avgRR
+      properties:
+        totalSignals:
+          type: integer
+        hitTP:
+          type: integer
+        hitSL:
+          type: integer
+        expired:
+          type: integer
+        winRate:
+          type: number
+        avgRR:
+          type: number

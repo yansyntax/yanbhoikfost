@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "XAUUSD Trading Signal"
+version = "1.0.0"
+id = "artifacts/xauusd-trading"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22042
+
+[services.development]
+run = "pnpm --filter @workspace/xauusd-trading run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/xauusd-trading", "run", "build" ]
+publicDir = "artifacts/xauusd-trading/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22042"
+BASE_PATH = "/"
