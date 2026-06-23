@@ -1,6 +1,4 @@
 import { Router, type IRouter } from "express";
-import YahooFinance from "yahoo-finance2";
-const yf = new YahooFinance();
 import { eq, count, sql } from "drizzle-orm";
 import { db, signalsTable } from "@workspace/db";
 
@@ -104,33 +102,60 @@ router.get("/analysis/candles", async (_req, res): Promise<void> => {
 
 export default router;
 
-// ─── Data Fetcher ──────────────────────────────────────────────────────────────
+// ─── Data Fetcher (direct HTTP — no npm package needed) ────────────────────────
 async function fetchXAUUSDCandles(): Promise<Candle[]> {
-  // GC=F = Gold Futures — use daily OHLCV for reliable SMC analysis
-  const end = new Date();
-  const start = new Date(end.getTime() - 90 * 24 * 60 * 60 * 1000); // 90 days back for D1 candles
+  // GC=F = Gold Futures — direct Yahoo Finance v8 chart API (no npm package)
+  const url =
+    "https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF" +
+    "?interval=1d&range=3mo&includePrePost=false";
 
-  const rows = await yf.historical("GC=F", {
-    period1: start,
-    period2: end,
-    interval: "1d" as const,
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; GoldSignalPro/1.0)",
+      Accept: "application/json",
+    },
+    signal: AbortSignal.timeout(10_000),
   });
 
-  if (!rows || rows.length === 0) {
-    throw new Error("No data from Yahoo Finance");
+  if (!res.ok) {
+    throw new Error(`Yahoo Finance HTTP ${res.status}`);
   }
 
-  type YFRow = { date: Date; open?: number | null; high?: number | null; low?: number | null; close?: number | null; volume?: number | null };
-  return (rows as YFRow[])
-    .filter((q) => q.open != null && q.high != null && q.low != null && q.close != null)
-    .map((q) => ({
-      time: new Date(q.date),
-      open: q.open as number,
-      high: q.high as number,
-      low: q.low as number,
-      close: q.close as number,
-      volume: (q.volume ?? 0) as number,
-    }));
+  const json = await res.json() as {
+    chart?: {
+      result?: Array<{
+        timestamp: number[];
+        indicators: {
+          quote: Array<{
+            open: (number | null)[];
+            high: (number | null)[];
+            low: (number | null)[];
+            close: (number | null)[];
+            volume: (number | null)[];
+          }>;
+        };
+      }>;
+      error?: unknown;
+    };
+  };
+
+  const result = json?.chart?.result?.[0];
+  if (!result?.timestamp?.length) {
+    throw new Error("No candle data in Yahoo Finance response");
+  }
+
+  const { open, high, low, close, volume } = result.indicators.quote[0];
+
+  return result.timestamp
+    .map((ts, i) => ({
+      time: new Date(ts * 1000),
+      open: open[i] ?? 0,
+      high: high[i] ?? 0,
+      low: low[i] ?? 0,
+      close: close[i] ?? 0,
+      volume: volume[i] ?? 0,
+    }))
+    .filter((c) => c.open > 0 && c.high > 0 && c.low > 0 && c.close > 0);
 }
 
 // ─── Core Analysis Builder ────────────────────────────────────────────────────
