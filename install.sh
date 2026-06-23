@@ -156,7 +156,10 @@ module.exports = {
 EOFPM2
 
 cd "$APP_DIR"
-pm2 delete gold-signal-api 2>/dev/null || true
+# Remove any old conflicting PM2 processes (previous installs)
+for OLD_PROC in gold-api gold-frontend gold-signal-api; do
+  pm2 delete "$OLD_PROC" 2>/dev/null || true
+done
 pm2 start ecosystem.config.cjs
 pm2 save
 pm2 startup systemd -u root --hp /root 2>/dev/null | tail -1 | bash 2>/dev/null || true
@@ -167,9 +170,14 @@ log "Configuring nginx..."
 # Detect server IP
 SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')
 
+# Backup existing nginx default config if present
+if [ -f /etc/nginx/sites-available/default ]; then
+  cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak."$(date +%s)" 2>/dev/null || true
+fi
+
 cat > "/etc/nginx/sites-available/gold-signal" <<EONGINX
 server {
-    listen 80;
+    listen 80 default_server;
     server_name ${SERVER_IP} _;
 
     # Frontend (static)
@@ -192,8 +200,17 @@ server {
 }
 EONGINX
 
-ln -sf /etc/nginx/sites-available/gold-signal /etc/nginx/sites-enabled/
+ln -sf /etc/nginx/sites-available/gold-signal /etc/nginx/sites-enabled/gold-signal
+# Disable default & any old site configs that would conflict on port 80
 rm -f /etc/nginx/sites-enabled/default
+# Remove any other enabled sites that also listen on port 80 (to avoid conflict)
+for f in /etc/nginx/sites-enabled/*; do
+  [[ "$f" == */gold-signal ]] && continue
+  if grep -q 'listen 80' "$f" 2>/dev/null; then
+    warn "Disabling conflicting nginx site: $f"
+    rm -f "$f"
+  fi
+done
 nginx -t && systemctl reload nginx
 ok "nginx configured"
 
